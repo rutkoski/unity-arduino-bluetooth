@@ -5,48 +5,55 @@ using UnityEngine;
 public class ArduinoBluetoothAdapter : MonoBehaviour
 {
 
+    public string address;
+
     private const string JAVA_CLASS = "com.bluetooth.rutkoski.unitybluetoothadapter.ArduinoBluetoothAdapter";
 
     public static ArduinoBluetoothAdapter I;
     AndroidJavaObject ajo;
 
-    void Awake()
+    protected virtual void Awake()
     {
         I = this;
     }
 
-    void Start()
+    protected virtual void Start()
     {
         if (ajo == null)
-            ajo = new AndroidJavaObject(JAVA_CLASS);
+            ajo = new AndroidJavaObject(JAVA_CLASS, address);
     }
-
-    public void init(string address)
+    
+    public virtual void Connect()
     {
-        ajo.Call("init", address);
+        ajo.Call("Connect");
     }
 
-    public void connect()
+    public virtual void Disconnect()
     {
-        ajo.Call("connect");
+        ajo.Call("Disconnect");
     }
 
-    public void disconnect()
+    public virtual void Send(string message)
     {
-        ajo.Call("disconnect");
+        ajo.Call("Send", message);
     }
 
-    public void write(string message)
+    public virtual void OnConnected()
     {
-        ajo.Call("write", message);
+        //
     }
 
-    public void OnMsgReceived(string message)
+    public virtual void OnDisconnected()
+    {
+        //
+    }
+
+    public virtual void OnMessageReceived(string message)
     {
         Debug.Log(message);
     }
 
-    public void OnError(string message)
+    public virtual void OnError(string message)
     {
         Debug.Log(message);
     }

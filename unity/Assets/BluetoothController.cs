@@ -2,41 +2,61 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class BluetoothController : MonoBehaviour
+public class BluetoothController : ArduinoBluetoothAdapter
 {
 
-    //public UnityBluetoothAdapter adapter;
+    // "00:21:13:01:CA:9F"
 
-    public ArduinoBluetoothAdapter adapter;
+    public delegate void OnArduinoFoundEvent();
+    public delegate void OnArduinoConnectedEvent();
+    public delegate void OnArduinoDisconnectedEvent();
 
-    public void ListDevices()
+    public OnArduinoFoundEvent OnArduinoFound = delegate { };
+    public OnArduinoConnectedEvent OnArduinoConnected = delegate { };
+    public OnArduinoDisconnectedEvent OnArduinoDisconnected = delegate { };
+
+    public Text responseText;
+
+    public override void OnConnected()
     {
-        try
+        base.OnConnected();
+
+        Send("<who>");
+    }
+    
+    public override void OnMessageReceived(string message)
+    {
+        base.OnMessageReceived(message);
+
+        ShowMessage(message);
+
+        if (message == "arduino")
         {
-            //string[] devices = adapter.GetBoundDeviceNames();
+            OnArduinoFound();
 
-            //Debug.Log(devices.ToString());
-
-            adapter.init("00:21:13:01:CA:9F");
+            Send("<connect>");
         }
-        catch (Exception e)
+        else if (message == "connected")
         {
-            //
+            OnArduinoConnected();
+        }
+        else if (message == "disconnected")
+        {
+            OnArduinoDisconnected();
         }
     }
 
-    public void Connect()
+    public override void OnError(string message)
     {
-        try
-        {
-            //adapter.Connect("Gear VR Controller(913F)");
-            adapter.connect();
-            adapter.write("<who>");
-        }
-        catch (Exception e)
-        {
-            //
-        }
+        base.OnError(message);
+
+        ShowMessage(message);
+    }
+
+    private void ShowMessage(string message)
+    {
+        responseText.text = message;
     }
 }

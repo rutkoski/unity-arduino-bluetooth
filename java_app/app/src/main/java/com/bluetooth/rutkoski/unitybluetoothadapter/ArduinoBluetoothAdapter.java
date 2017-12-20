@@ -16,7 +16,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import com.unity3d.player.UnityPlayer;
+//import com.unity3d.player.UnityPlayer;
 
 /**
  * Created by rutkoski on 19/12/2017.
@@ -161,7 +161,7 @@ public class ArduinoBluetoothAdapter {
     }
 
     private void SendMessage(String type, String message) {
-        UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", type, message);
+        //UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", type, message);
         Log.d(TAG, type + ": " + message);
     }
 
@@ -214,7 +214,7 @@ public class ArduinoBluetoothAdapter {
 
         /* Call this from the main activity to Send data to the remote device */
         public void send(String message) {
-            byte[] msgBuffer = message.getBytes();
+           byte[] msgBuffer = message.getBytes();
 
             try {
                 mmOutStream.write(msgBuffer);

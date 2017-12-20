@@ -31,9 +31,9 @@ public class ArduinoBluetoothAdapter {
 
     //private static final String TAG = "HC-05";
 
-    //Handler h;
+    Handler h;
 
-    //final int RECIEVE_MESSAGE = 1;        // Status  for Handler
+    final int RECIEVE_MESSAGE = 1;        // Status  for Handler
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private StringBuilder sb = new StringBuilder();
@@ -44,10 +44,12 @@ public class ArduinoBluetoothAdapter {
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     // MAC-address of Bluetooth module (you must edit this line)
-    private static String address = "00:15:FF:F2:19:5F";
+    private String address = "00:15:FF:F2:19:5F";
 
-    public void init() {
-        /*h = new Handler() {
+    public void init(String address) {
+        this.address = address;
+
+        h = new Handler() {
             public void handleMessage(android.os.Message msg) {
                 switch (msg.what) {
                     case RECIEVE_MESSAGE:                                                   // if receive massage
@@ -59,12 +61,13 @@ public class ArduinoBluetoothAdapter {
                             String sbprint = sb.substring(0, endOfLineIndex);               // extract string
                             sb.delete(0, sb.length());                                      // and clear
                             //txtArduino.setText("Data from Arduino: " + sbprint);            // update TextView
+                            UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnMsgReceived", sbprint);
                         }
                         //Log.d(TAG, "...String:"+ sb.toString() +  "Byte:" + msg.arg1 + "...");
                         break;
                 }
             };
-        };*/
+        };
 
         btAdapter = BluetoothAdapter.getDefaultAdapter();       // get Bluetooth adapter
     }
@@ -76,6 +79,7 @@ public class ArduinoBluetoothAdapter {
                 return (BluetoothSocket) m.invoke(device, MY_UUID);
             } catch (Exception e) {
                 //Log.e(TAG, "Could not create Insecure RFComm Connection",e);
+                UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnError", "Could not create Insecure RFComm Connection: " + e.getMessage());
             }
         }
         return  device.createRfcommSocketToServiceRecord(MY_UUID);
@@ -96,6 +100,7 @@ public class ArduinoBluetoothAdapter {
             btSocket = createBluetoothSocket(device);
         } catch (IOException e) {
             //errorExit("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
+            UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnError", "Socket create failed: " + e.getMessage());
         }
 
         // Discovery is resource intensive.  Make sure it isn't going on
@@ -114,6 +119,7 @@ public class ArduinoBluetoothAdapter {
                 btSocket.close();
             } catch (IOException e2) {
                 //errorExit("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
+                UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnError", "Unable to close socket during connection failure" + e2.getMessage());
             }
         }
 
@@ -131,7 +137,12 @@ public class ArduinoBluetoothAdapter {
             btSocket.close();
         } catch (IOException e2) {
             //errorExit("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
+            UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnError", "Failed to close socket: " + e2.getMessage());
         }
+    }
+
+    public void write(String message) {
+        mConnectedThread.write(message);
     }
 
     /*private void checkBTState() {
@@ -175,7 +186,7 @@ public class ArduinoBluetoothAdapter {
         }
 
         public void run() {
-            byte[] buffer = new byte[256];  // buffer store for the stream
+            byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
@@ -183,8 +194,8 @@ public class ArduinoBluetoothAdapter {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);        // Get number of bytes and message in "buffer"
-                    //h.obtainMessage(RECIEVE_MESSAGE, bytes, -1, buffer).sendToTarget();     // Send to message queue Handler
-                    UnityPlayer.UnitySendMessage("UnityBluetoothAdapter", "OnMsgReceived", Integer.toString(bytes));
+                    h.obtainMessage(RECIEVE_MESSAGE, bytes, -1, buffer).sendToTarget();     // Send to message queue Handler
+                    //UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnMsgReceived", Integer.toString(bytes));
                 } catch (IOException e) {
                     break;
                 }
@@ -201,6 +212,7 @@ public class ArduinoBluetoothAdapter {
                 mmOutStream.write(msgBuffer);
             } catch (IOException e) {
                 //Log.d(TAG, "...Error data send: " + e.getMessage() + "...");
+                UnityPlayer.UnitySendMessage("ArduinoBluetoothAdapter", "OnError", "...Error data send: " + e.getMessage());
             }
         }
     }
